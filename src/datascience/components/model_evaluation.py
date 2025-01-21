@@ -28,6 +28,11 @@ class ModelEvaluation:
     
     def log_into_mlflow(self):
         
+        # Ensure no active run exists
+        if mlflow.active_run():
+            print(f"Ending active run with ID: {mlflow.active_run().info.run_id}")
+            mlflow.end_run()
+        
         test_data=pd.read_csv(self.config.test_data_path)
         model = joblib.load(self.config.model_path)
         
@@ -38,7 +43,7 @@ class ModelEvaluation:
         mlflow.set_registry_uri(self.config.mlflow_uri)
         tracking_url_type_store = urlparse(mlflow.get_artifact_uri()).scheme
         
-        with mlflow.start_run(nested=True):
+        with mlflow.start_run(nested = True):
             
             predicted_qualities =  model.predict(test_x)
             
@@ -63,5 +68,7 @@ class ModelEvaluation:
                 mlflow.sklearn.log_model(model, "model", registered_model_name="ElasticnetModel")
             else:
                 mlflow.sklearn.log_model(model, "model")
+                
+            
             
             
